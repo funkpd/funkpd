@@ -2,52 +2,73 @@
 <html>
 <head>
     <style>
-        /* Prevent scrollbars and ensure full viewport coverage */
         body {
             margin: 0;
             overflow: hidden;
-            background: #000
+            background: #000;
+            position: relative;
+            height: 100vh;
         }
         canvas {
-            display: block
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+        }
+        h1 {
+            position: absolute;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffffff;
+            font-size: 4em;
+            text-align: center;
+            z-index: 1;
+            margin: 0;
+            opacity: .1;
+            transition: opacity 3s;;
+        }
+        h1:hover {
+            opacity: .9;
         }
     </style>
 </head>
 <body>
     <canvas id="canvas"></canvas>
+    <h1>FunkPd Web Dev &amp; Design<br>internet with soul.</h1>
     <script>
         // Core visualization settings
         const config = {
-            dt: 0.005,          // Time step - balance between speed and accuracy
-            scale: 15,          // Visual scale of the attractor
-            fadeAlpha: 0.03,    // Trail persistence (lower = longer trails)
-            pointsPerFrame: 50  // Higher values = smoother animation, more CPU
+            dt: 0.0000667,  // Approximating 2/3 (chaotic attractor relevance)
+            scale: 26.67,   // Close to the Lorenz system’s ρ value
+            fade_alpha: 0.02667,  // 1/ρ for balance
+            points_per_frame: 1333  // 2/3 of 2000
         };
 
         // Initialize canvas
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
 
-        function setCanvasSize() {
+        function set_canvas_size() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         }
         
         // Lorenz system state
         const state = {
-            x: 0.1,  // Initial conditions affect early pattern
-            y: 0,    // but system quickly settles into attractor
+            x: 0.1,
+            y: 0,
             z: 0,
-            t: 0     // Time parameter for evolution
+            t: 0
         };
 
-        function evolveSystem() {
-            // Parameters evolve very slowly for smooth transitions
+        function evolve_system() {
             const sigma = 10 + 5 * Math.sin(state.t * 0.05);
             const rho = 28 + 10 * Math.sin(state.t * 0.03);
             const beta = 2.667 + Math.sin(state.t * 0.04);
 
-            // Core Lorenz equations
             const dx = sigma * (state.y - state.x) * config.dt;
             const dy = (state.x * (rho - state.z) - state.y) * config.dt;
             const dz = (state.x * state.y - beta * state.z) * config.dt;
@@ -57,34 +78,27 @@
             state.z += dz;
             state.t += config.dt;
 
-            // Transform system coordinates to screen space
-            const screenX = canvas.width/2 + (state.x * config.scale);
-            const screenY = canvas.height/2 + (state.y * config.scale);
+            const screen_x = canvas.width / 2 + (state.x * config.scale);
+            const screen_y = canvas.height / 2 + (state.y * config.scale);
 
-            // Color based on z-coordinate for visual depth
             const hue = (240 + state.z * 2) % 360;
             ctx.fillStyle = `hsl(${hue}, 70%, 50%)`;
-            ctx.fillRect(screenX, screenY, 1, 1);
+            ctx.fillRect(screen_x, screen_y, 1, 1);
         }
 
         function animate() {
-            // Fade previous frame
-            ctx.fillStyle = `rgba(0,0,0,${config.fadeAlpha})`;
+            ctx.fillStyle = `rgba(0, 0, 0, ${config.fade_alpha})`;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Evolve system multiple times per frame for smooth trails
-            for(let i = 0; i < config.pointsPerFrame; i++) {
-                evolveSystem();
+            for (let i = 0; i < config.points_per_frame; i++) {
+                evolve_system();
             }
             
             requestAnimationFrame(animate);
         }
 
-        // Handle window resizing
-        window.addEventListener('resize', setCanvasSize);
-        
-        // Start visualization
-        setCanvasSize();
+        window.addEventListener('resize', set_canvas_size);
+        set_canvas_size();
         animate();
     </script>
 </body>
