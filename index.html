@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* Prevent scrollbars and ensure full viewport coverage */
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+        }
+        canvas {
+            display: block; /* Removes bottom margin */
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        // Core visualization settings
+        const config = {
+            dt: 0.005,          // Time step - balance between speed and accuracy
+            scale: 15,          // Visual scale of the attractor
+            fadeAlpha: 0.03,    // Trail persistence (lower = longer trails)
+            pointsPerFrame: 50  // Higher values = smoother animation, more CPU
+        };
+
+        // Initialize canvas
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        function setCanvasSize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        
+        // Lorenz system state
+        const state = {
+            x: 0.1,  // Initial conditions affect early pattern
+            y: 0,    // but system quickly settles into attractor
+            z: 0,
+            t: 0     // Time parameter for evolution
+        };
+
+        function evolveSystem() {
+            // Parameters evolve very slowly for smooth transitions
+            const sigma = 10 + 5 * Math.sin(state.t * 0.05);
+            const rho = 28 + 10 * Math.sin(state.t * 0.03);
+            const beta = 2.667 + Math.sin(state.t * 0.04);
+
+            // Core Lorenz equations
+            const dx = sigma * (state.y - state.x) * config.dt;
+            const dy = (state.x * (rho - state.z) - state.y) * config.dt;
+            const dz = (state.x * state.y - beta * state.z) * config.dt;
+
+            state.x += dx;
+            state.y += dy;
+            state.z += dz;
+            state.t += config.dt;
+
+            // Transform system coordinates to screen space
+            const screenX = canvas.width/2 + (state.x * config.scale);
+            const screenY = canvas.height/2 + (state.y * config.scale);
+
+            // Color based on z-coordinate for visual depth
+            const hue = (240 + state.z * 2) % 360;
+            ctx.fillStyle = `hsl(${hue}, 70%, 50%)`;
+            ctx.fillRect(screenX, screenY, 1, 1);
+        }
+
+        function animate() {
+            // Fade previous frame
+            ctx.fillStyle = `rgba(0,0,0,${config.fadeAlpha})`;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Evolve system multiple times per frame for smooth trails
+            for(let i = 0; i < config.pointsPerFrame; i++) {
+                evolveSystem();
+            }
+            
+            requestAnimationFrame(animate);
+        }
+
+        // Handle window resizing
+        window.addEventListener('resize', setCanvasSize);
+        
+        // Start visualization
+        setCanvasSize();
+        animate();
+    </script>
+</body>
+</html>
